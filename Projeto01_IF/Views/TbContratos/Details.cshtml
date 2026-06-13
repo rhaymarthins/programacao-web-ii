@@ -1,0 +1,52 @@
+@model Projeto01_IF.Models.TbContrato
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>TbContrato</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.IdPlano)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.IdPlano)
+        </dd>
+    </dl>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.DataInicio)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.DataInicio)
+        </dd>
+    </dl>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.DataFim)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.DataFim)
+        </dd>
+    </dl>
+        @* <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.IdPlanoNavigation)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.IdPlanoNavigation)
+        </dd> *@
+    </dl>
+        @* <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.TbProfissional)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.TbProfissional)
+        </dd> *@
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.IdContrato">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
