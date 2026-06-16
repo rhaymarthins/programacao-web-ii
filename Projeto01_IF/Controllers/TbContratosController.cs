@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Projeto01_IF.Models;
-
+// Antonio Ray Martins Vieira
 [Authorize]
 public class TbContratosController : Controller
 {
