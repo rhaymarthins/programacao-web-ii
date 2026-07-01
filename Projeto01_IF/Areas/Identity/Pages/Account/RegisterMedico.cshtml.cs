@@ -110,7 +110,7 @@ public class RegisterModelMedico : PageModel
     public async Task OnGetAsync(string? returnUrl = null)
     {
         ViewData["IdCidade"] = new SelectList(_context.TbCidade, "IdCidade", "Nome");
-        ViewData["IdPlano"] = new SelectList(_context.TbPlano, "IdPlano", "Nome");
+        ViewData["IdPlano"] = new SelectList(_context.TbPlano.Where(p => p.IdPlano == 1 || p.IdPlano == 2), "IdPlano", "Nome");
         ViewData["IdTipoAcesso"] = new SelectList(_context.TbTipoAcesso, "IdTipoAcesso", "Nome");
         ReturnUrl = returnUrl;
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
