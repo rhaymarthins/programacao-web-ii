@@ -40,7 +40,7 @@
                 @Html.DisplayNameFor(model => model.Bairro)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.IdCidade)
+                @Html.DisplayNameFor(model => model.IdCidadeNavigation.Nome)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.TelResidencial)
@@ -94,7 +94,7 @@
                 @Html.DisplayFor(model => item.Bairro)
             </td>
             <td>
-                @Html.DisplayFor(model => item.IdCidade)
+                @Html.DisplayFor(model => item.IdCidadeNavigation.Nome)
             </td>
             <td>
                 @Html.DisplayFor(model => item.TelResidencial)

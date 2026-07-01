@@ -1,6 +1,11 @@
 
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using Projeto01_IF.Data;
 using Projeto01_IF.Models;
 // Antonio Ray Martins Vieira
 public class TbPacientesController : Controller
@@ -13,21 +18,71 @@ public class TbPacientesController : Controller
     }
 
     // GET: TBPACIENTES
+    [Authorize(Roles = "Medico,Nutricionista")]
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.TbPaciente.ToListAsync());
+        var userManager = HttpContext.RequestServices.GetService<UserManager<ApplicationUser>>();
+        if (userManager != null)
+        {
+            var email = User.Identity?.Name;
+            if (email != null)
+            {
+                var user = await userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    var tbProfissional = await _context.TbProfissional
+                    .FirstOrDefaultAsync(p => p.IdUser == user.Id);
+
+                    if (tbProfissional != null)
+                    {
+                        var pacientes = await _context.TbMedicoPaciente
+                        .Where(mp => mp.IdProfissional == tbProfissional.IdProfissional)
+                        .Include(mp => mp.IdPacienteNavigation)
+                        .ThenInclude(p => p.IdCidadeNavigation)
+                        .Select(mp => mp.IdPacienteNavigation)
+                        .ToListAsync();
+
+                        return View(pacientes);
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+        else
+        {
+            return NotFound();
+        }
     }
 
     // GET: TBPACIENTES/Details/5
-    public async Task<IActionResult> Details(int? idpaciente)
+    [Authorize(Roles = "Medico,Nutricionista")]
+    public async Task<IActionResult> Details(int? id)
     {
-        if (idpaciente == null)
+        if (id == null)
         {
             return NotFound();
         }
 
+        var pacienteAutorizado = await VerificarVinculoAsync(id);
+        if (!pacienteAutorizado)
+        {
+            return Forbid();
+        }
+
         var tbpaciente = await _context.TbPaciente
-            .FirstOrDefaultAsync(m => m.IdPaciente == idpaciente);
+                            .Include(t => t.IdCidadeNavigation)
+                            .FirstOrDefaultAsync(m => m.IdPaciente == id);
         if (tbpaciente == null)
         {
             return NotFound();
@@ -36,9 +91,45 @@ public class TbPacientesController : Controller
         return View(tbpaciente);
     }
 
+    // método auxiliar privado para verificar vinculo entre o profissional logado e o paciente
+    private async Task<bool> VerificarVinculoAsync(int? idPaciente)
+    {
+        var userManager = HttpContext.RequestServices.GetService<UserManager<ApplicationUser>>();
+        if (userManager == null)
+        {
+            return false;
+        }
+
+        var email = User.Identity?.Name;
+        if (email == null)
+        {
+            return false;
+        }
+
+        var user = await userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            return false;
+        }
+
+        var tbProfissional = await _context.TbProfissional
+            .FirstOrDefaultAsync(p => p.IdUser == user.Id);
+        if (tbProfissional == null)
+        {
+            return false;
+        }
+
+        var vinculoExiste = await _context.TbMedicoPaciente
+            .AnyAsync(mp => mp.IdPaciente == idPaciente && mp.IdProfissional == tbProfissional.IdProfissional);
+
+        return vinculoExiste;
+    }
+
     // GET: TBPACIENTES/Create
+    [Authorize(Roles = "Medico,Nutricionista")]
     public IActionResult Create()
     {
+        ViewData["IdCidade"] = new SelectList(_context.TbCidade, "IdCidade", "Nome");
         return View();
     }
 
@@ -47,31 +138,91 @@ public class TbPacientesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("IdPaciente,Nome,Rg,Cpf,DataNascimento,NomeResponsavel,Sexo,Etnia,Endereco,Bairro,IdCidade,TelResidencial,TelComercial,TelCelular,Profissao,FlgAtleta,FlgGestante")] TbPaciente tbpaciente)
+    [Authorize(Roles = "Medico,Nutricionista")]
+    public async Task<IActionResult> Create([Bind("Nome,Rg,Cpf,DataNascimento,NomeResponsavel,Sexo,Etnia,Endereco,Bairro,IdCidade,TelResidencial,TelComercial,TelCelular,Profissao,FlgAtleta,FlgGestante")] TbPaciente tbPaciente)
     {
-        if (ModelState.IsValid)
+        try
         {
-            _context.Add(tbpaciente);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            if (ModelState.IsValid)
+            {
+                var userManager = HttpContext.RequestServices.GetService<UserManager<ApplicationUser>>();
+                if (userManager != null)
+                {
+                    var email = User.Identity?.Name;
+                    if (email != null)
+                    {
+                        var user = await userManager.FindByEmailAsync(email);
+                        if (user != null)
+                        {
+                            var tbProfissional = await _context.TbProfissional
+                                                    .FirstOrDefaultAsync(p => p.IdUser == user.Id);
+                            if (tbProfissional != null)
+                            {
+                                _context.Add(tbPaciente);
+                                await _context.SaveChangesAsync();
+
+                                var vinculo = new TbMedicoPaciente
+                                {
+                                    IdPaciente = tbPaciente.IdPaciente,
+                                    IdProfissional = tbProfissional.IdProfissional,
+                                    InformacaoResumida = "Paciente cadastrado por " + tbProfissional.Nome
+                                };
+                                _context.Add(vinculo);
+                                await _context.SaveChangesAsync();
+
+                                return RedirectToAction(nameof(Index));
+                            }
+                            else
+                            {
+                                return NotFound();
+                            }
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
         }
-        return View(tbpaciente);
+        catch (DbUpdateException dex)
+        {
+            ModelState.AddModelError("", "Incapaz de salvar." + dex.ToString());
+        }
+        ViewData["IdCidade"] = new SelectList(_context.TbCidade, "IdCidade", "Nome", tbPaciente.IdCidade);
+        return View(tbPaciente);
     }
 
     // GET: TBPACIENTES/Edit/5
-    public async Task<IActionResult> Edit(int? idpaciente)
+    [Authorize(Roles = "Medico,Nutricionista")]
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (idpaciente == null)
+        if (id == null)
         {
             return NotFound();
         }
 
-        var tbpaciente = await _context.TbPaciente.FindAsync(idpaciente);
-        if (tbpaciente == null)
+        var pacienteAutorizado = await VerificarVinculoAsync(id);
+        if (!pacienteAutorizado)
+        {
+            return Forbid();
+        }
+
+        var tbPaciente = await _context.TbPaciente.FindAsync(id);
+        if (tbPaciente == null)
         {
             return NotFound();
         }
-        return View(tbpaciente);
+        ViewData["IdCidade"] = new SelectList(_context.TbCidade, "IdCidade", "Nome", tbPaciente.IdCidade);
+        return View(tbPaciente);
     }
 
     // POST: TBPACIENTES/Edit/5
@@ -79,46 +230,68 @@ public class TbPacientesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? idpaciente, [Bind("IdPaciente,Nome,Rg,Cpf,DataNascimento,NomeResponsavel,Sexo,Etnia,Endereco,Bairro,IdCidade,TelResidencial,TelComercial,TelCelular,Profissao,FlgAtleta,FlgGestante")] TbPaciente tbpaciente)
+    [Authorize(Roles = "Medico,Nutricionista")]
+    public async Task<IActionResult> EditPost(int? id)
     {
-        if (idpaciente != tbpaciente.IdPaciente)
+        if (id == null)
         {
             return NotFound();
         }
 
-        if (ModelState.IsValid)
+        var pacienteAutorizado = await VerificarVinculoAsync(id);
+        if (!pacienteAutorizado)
+        {
+            return Forbid();
+        }
+
+        var tbPaciente = await _context.TbPaciente.FindAsync(id);
+        if (tbPaciente == null)
+        {
+            return NotFound();
+        }
+
+        if (await TryUpdateModelAsync<TbPaciente>(
+        tbPaciente,
+        "",
+        p => p.Nome, p => p.Rg, p => p.Cpf, p => p.DataNascimento, p => p.NomeResponsavel,
+        p => p.Sexo, p => p.Etnia, p => p.Endereco, p => p.Bairro, p => p.IdCidade,
+        p => p.TelResidencial, p => p.TelComercial, p => p.TelCelular, p => p.Profissao,
+        p => p.FlgAtleta, p => p.FlgGestante))
         {
             try
             {
-                _context.Update(tbpaciente);
                 await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateException ex)
             {
-                if (!TbPacienteExists(tbpaciente.IdPaciente))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                ModelState.AddModelError("", "Unable to save changes. " +
+                    "Try again, and if the problem persists, " +
+                    "see your system administrator." + ex.ToString());
             }
-            return RedirectToAction(nameof(Index));
         }
-        return View(tbpaciente);
+        ViewData["IdCidade"] = new SelectList(_context.TbCidade, "IdCidade", "Nome", tbPaciente.IdCidade);
+        return View(tbPaciente);
     }
 
     // GET: TBPACIENTES/Delete/5
-    public async Task<IActionResult> Delete(int? idpaciente)
+    [Authorize(Roles = "Medico,Nutricionista")]
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (idpaciente == null)
+        if (id == null)
         {
             return NotFound();
         }
 
+        var pacienteAutorizado = await VerificarVinculoAsync(id);
+        if (!pacienteAutorizado)
+        {
+            return Forbid();
+        }
+
         var tbpaciente = await _context.TbPaciente
-            .FirstOrDefaultAsync(m => m.IdPaciente == idpaciente);
+            .Include(t => t.IdCidadeNavigation)
+            .FirstOrDefaultAsync(m => m.IdPaciente == id);
         if (tbpaciente == null)
         {
             return NotFound();
@@ -130,16 +303,37 @@ public class TbPacientesController : Controller
     // POST: TBPACIENTES/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? idpaciente)
+    [Authorize(Roles = "Medico,Nutricionista")]
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var tbpaciente = await _context.TbPaciente.FindAsync(idpaciente);
-        if (tbpaciente != null)
+        var pacienteAutorizado = await VerificarVinculoAsync(id);
+        if (!pacienteAutorizado)
         {
-            _context.TbPaciente.Remove(tbpaciente);
+            return Forbid();
         }
 
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+        var tbPaciente = await _context.TbPaciente.FindAsync(id);
+        if (tbPaciente == null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        try
+        {
+            var vinculo = await _context.TbMedicoPaciente
+                            .FirstOrDefaultAsync(mp => mp.IdPaciente == id);
+
+            if (vinculo != null)
+            {
+                _context.TbMedicoPaciente.Remove(vinculo);
+            }
+            _context.TbPaciente.Remove(tbPaciente);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+        catch
+        {
+            return RedirectToAction(nameof(Delete), new { id = id, saveChangesError = true });
+        }
     }
 
     private bool TbPacienteExists(int? idpaciente)

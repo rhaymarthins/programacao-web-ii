@@ -1,0 +1,131 @@
+@model IEnumerable<Projeto01_IF.Models.ProfissionalResumido>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Nome)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.NomePlano)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Cpf)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CrmCrn)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Especialidade)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.NomeCidade)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Logradouro)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Numero)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Bairro)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Cep)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ddd1)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ddd2)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Telefone1)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Telefone2)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Salario)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.Nome)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.NomePlano)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Cpf)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CrmCrn)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Especialidade)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.NomeCidade)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Logradouro)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Numero)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Bairro)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Cep)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Ddd1)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Ddd2)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Telefone1)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Telefone2)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Salario)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.IdProfissional" class="btn btn-primary">Editar</a>
+                <a asp-action="Details" asp-route-id="@item.IdProfissional" class="btn btn-primary">Detalhes</a>
+                <a asp-action="Delete" asp-route-id="@item.IdProfissional" class="btn btn-primary">Excluir</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+@{
+    if (Model.Count() > 1)
+    {
+        var i = 0;
+        while (i < 5)
+        {
+            <a asp-action="Delete" asp-route-id="@Model.Last().IdProfissional" class="btn btn-primary"><i class="bi-alarm"></i>Delete</a>
+            i++;
+        }
+    }
+}
