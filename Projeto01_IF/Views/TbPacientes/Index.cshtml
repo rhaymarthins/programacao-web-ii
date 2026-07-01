@@ -115,9 +115,9 @@
                 @Html.DisplayFor(model => item.FlgGestante)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.IdPaciente">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.IdPaciente">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.IdPaciente">Delete</a>
+                    <a asp-action="Edit" asp-route-id="@item.IdPaciente" class="btn btn-primary mb-1">Editar</a>
+                    <a asp-action="Details" asp-route-id="@item.IdPaciente" class="btn btn-primary ms-2 mb-1">Detalhes</a>
+                    <a asp-action="Delete" asp-route-id="@item.IdPaciente" class="btn btn-danger ms-2 mb-1">Excluir</a>
             </td>
         </tr>
 }

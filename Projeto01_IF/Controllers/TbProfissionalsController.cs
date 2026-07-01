@@ -56,66 +56,6 @@ public class TbProfissionalsController : Controller
                                      });
             return View(db_IFContextGeral);
         }
-        // Método 1
-        //var db_IFContext = _context.TbProfissional
-        //                    .Include(t => t.IdCidadeNavigation)
-        //                    .Include(t => t.IdContratoNavigation)
-        //                        .ThenInclude(s => s.IdPlanoNavigation)
-        //                    .Include(t => t.IdTipoAcessoNavigation)
-        //                    .Where(t => t.IdContratoNavigation.IdPlano == 1);
-
-        // Método 2
-        //var db_IFContext = (from pro in _context.TbProfissional
-        //                    where (Plano)pro.IdContratoNavigation.IdPlano == Plano.MedicoTotal
-        //                    select pro)
-        //                    .Include(t => t.IdCidadeNavigation)
-        //                    .Include(t => t.IdTipoAcessoNavigation)
-        //                    .Include(pro => pro.IdContratoNavigation)
-        //                        .ThenInclude(contrato => contrato.IdPlanoNavigation);
-
-        // Método 3
-        //var db_IFContext = from pro in _context.TbProfissional
-        //                   join contrato in _context.TbContrato on pro.IdContrato equals contrato.IdContrato
-        //                   join plano in _context.TbPlano on contrato.IdPlano equals plano.IdPlano
-        //                   where plano.IdPlano == 1
-        //                   select pro;
-
-        // Método Otimizado
-        // Nome Plano Cpf CrmCrn Especialidade Logradouro Numero Bairro Cep Dddl Ddd2 Telefonel Telefone2 Salario IdCidadeNavigation
-        //else
-        //{
-        //    if (User.IsInRole("GerenteNutricionista"))
-        //    {
-        //        var db_IFContext2 = (from pro in _context.TbProfissional
-        //                                 where (Plano)pro.IdContratoNavigation.IdPlano == Plano.Nutricionista
-        //                             select new ProfissionalResumido
-        //                             {
-        //                                 IdProfissional = pro.IdProfissional,
-        //                                 Nome = pro.Nome,
-        //                                 NomeCidade = pro.IdCidadeNavigation.Nome,
-        //                                 NomePlano = pro.IdContratoNavigation.IdPlanoNavigation.Nome,
-        //                                 Cpf = pro.Cpf,
-        //                                 CrmCrn = pro.CrmCrn,
-        //                                 Especialidade = pro.Especialidade,
-        //                                 Logradouro = pro.Logradouro,
-        //                                 Numero = pro.Numero,
-        //                                 Bairro = pro.Bairro,
-        //                                 Cep = pro.Cep,
-        //                                 Ddd1 = pro.Ddd1,
-        //                                 Ddd2 = pro.Ddd2,
-        //                                 Telefone1 = pro.Telefone1,
-        //                                 Telefone2 = pro.Telefone2,
-        //                                 Salario = pro.Salario,
-        //                             });
-
-        //        return View(db_IFContext2);
-        //    }
-        //    else
-        //    {
-        //        // E um medico padrao, deveria ter acesso as informações dos outros medicos? Não! Restringir o Index, permitir somente Details.
-        //        return Forbid();
-        //    }
-        //}
         else
         {
             if (User.IsInRole("GerenteMedico"))
